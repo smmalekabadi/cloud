@@ -26,4 +26,14 @@ public class Transaction {
     private long orderId;
     private int statusCode;
     private long refId;
+
+    public Transaction(long profileId, LocalDateTime createAt, LocalDateTime modifiedAt, long value, long orderId, int statusCode, long refId) {
+        this.profileId = profileId;
+        this.createAt = createAt;
+        this.modifiedAt = modifiedAt;
+        this.value = value;
+        this.orderId = orderId;
+        this.statusCode = statusCode;
+        this.refId = refId;
+    }
 }
