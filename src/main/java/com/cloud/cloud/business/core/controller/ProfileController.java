@@ -40,7 +40,7 @@ public class ProfileController {
     @RequestMapping(value = "/profile", method = RequestMethod.POST)
     @ResponseBody
     public String createProfile(@RequestParam String email,
-                                @RequestParam String password,
+                                @RequestParam(required = false) String password,
                                 @RequestParam String phoneNo,
                                 @RequestParam String nationalCode,
                                 @RequestParam String address,
