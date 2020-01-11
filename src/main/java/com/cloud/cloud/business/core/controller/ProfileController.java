@@ -47,7 +47,6 @@ public class ProfileController {
                                 @RequestParam String postalCode) {
         Profile profile = new Profile(email, phoneNo, nationalCode, address, postalCode, password);
         ProfileSimple profileSimple = new ProfileSimple(email,password);
-        RestTemplate template = new RestTemplate();
         ImmutableMap payload = ImmutableMap.of("email",email,"password",password);
 
         HttpHeaders headers = new HttpHeaders();
