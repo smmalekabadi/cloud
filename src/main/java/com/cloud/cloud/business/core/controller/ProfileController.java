@@ -3,15 +3,12 @@ package com.cloud.cloud.business.core.controller;
 import com.cloud.cloud.business.data.*;
 import com.cloud.cloud.business.data.repository.ProfileRepository;
 import com.cloud.cloud.business.data.repository.WalletRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import java.security.Principal;
 import java.util.Arrays;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/account/")
@@ -37,16 +34,17 @@ public class ProfileController {
     @ResponseBody
     public String createProfile(@RequestBody Profile profile) {
 
-        ImmutableMap payload = ImmutableMap.of("email", profile.getEmail(), "password", profile.getPassword());
+        ImmutableMap<String, Object> payload = ImmutableMap.of("email", profile.getEmail(), "password", profile.getPassword());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<ImmutableMap> requestEntity =
-                new HttpEntity<>(payload, headers);
+        HttpEntity<ImmutableMap<String, Object>> requestEntity =
+                new HttpEntity<ImmutableMap<String, Object>>(payload, headers);
+        ResponseEntity<RegisterResponse> registerResponseResponseEntity = null;
         try {
-            ResponseEntity<RegisterResponse> registerResponseResponseEntity = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class);
+            registerResponseResponseEntity = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class);
             RegisterResponse registerResponse = registerResponseResponseEntity.getBody();
 //            RegisterResponse registerResponse = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class).getBody();
             long profileId = profileRepository.save(profile).getId();
@@ -55,6 +53,12 @@ public class ProfileController {
             return registerResponse.getToken();
         } catch (Exception ex) {
             ex.printStackTrace();
+            if (registerResponseResponseEntity != null) {
+                if (registerResponseResponseEntity.getStatusCode().value() == 400)
+                    return "invalid parameters";
+                else
+                    return "email is already exists";
+            }
             return "Please check you username and password or maybe this email is already exists";
         }
 
@@ -62,24 +66,38 @@ public class ProfileController {
 
     @RequestMapping(value = "/profile", method = RequestMethod.PUT)
     @ResponseBody
-    public Profile updateProfile(@RequestParam String phoneNo,
-                                 @RequestParam String nationalCode,
-                                 @RequestParam String address,
-                                 @RequestParam String postalCode,
-                                 @RequestHeader("authorization") String headers) {
-        Profile profile = validate(headers);
-        profile.setPhoneNo(phoneNo);
-        profile.setNationalCode(nationalCode);
-        profile.setAddress(address);
-        profile.setPostalCode(postalCode);
-        profileRepository.save(profile);
-        return profile;
+    public ResponseEntity updateProfile(@RequestBody Profile profile,
+                                                 @RequestHeader("authorization") String headers) {
+        Profile baseProfile = validate(headers);
+        if (profile.getPhoneNo() != null) {
+            baseProfile.setPhoneNo(profile.getPhoneNo());
+        } else
+            return new ResponseEntity<String>("phone no not found",null,HttpStatus.NOT_FOUND);
+
+        if (profile.getNationalCode() != null) {
+            baseProfile.setNationalCode(profile.getNationalCode());
+        } else
+            return new ResponseEntity<String>("national code not found",null,HttpStatus.NOT_FOUND);
+
+        if (profile.getAddress() != null) {
+            baseProfile.setAddress(profile.getAddress());
+        } else
+            return new ResponseEntity<String>("address not found",null,HttpStatus.NOT_FOUND);
+
+
+        if (profile.getPostalCode() != null) {
+            baseProfile.setPostalCode(profile.getPostalCode());
+        }
+        else
+            return new ResponseEntity<String>("postal code not found",null,HttpStatus.NOT_FOUND);
+
+        profileRepository.save(baseProfile);
+        return new ResponseEntity<>(baseProfile, null, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     @ResponseBody
     public Profile getProfile(@RequestHeader("authorization") String headers) {
-//        return profileRepository.findById(8L).get();
         return validate(headers);
     }
 
