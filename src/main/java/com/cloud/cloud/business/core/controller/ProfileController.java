@@ -72,33 +72,37 @@ public class ProfileController {
         if (profile.getPhoneNo() != null) {
             baseProfile.setPhoneNo(profile.getPhoneNo());
         } else
-            return new ResponseEntity<String>("phone no not found",null,HttpStatus.NOT_FOUND);
+            return new ResponseEntity<String>("phone no not found",HttpStatus.NOT_FOUND);
 
         if (profile.getNationalCode() != null) {
             baseProfile.setNationalCode(profile.getNationalCode());
         } else
-            return new ResponseEntity<String>("national code not found",null,HttpStatus.NOT_FOUND);
+            return new ResponseEntity<String>("national code not found",HttpStatus.NOT_FOUND);
 
         if (profile.getAddress() != null) {
             baseProfile.setAddress(profile.getAddress());
         } else
-            return new ResponseEntity<String>("address not found",null,HttpStatus.NOT_FOUND);
+            return new ResponseEntity<String>("address not found",HttpStatus.NOT_FOUND);
 
 
         if (profile.getPostalCode() != null) {
             baseProfile.setPostalCode(profile.getPostalCode());
         }
         else
-            return new ResponseEntity<String>("postal code not found",null,HttpStatus.NOT_FOUND);
+            return new ResponseEntity<String>("postal code not found",HttpStatus.NOT_FOUND);
 
         profileRepository.save(baseProfile);
-        return new ResponseEntity<>(baseProfile, null, HttpStatus.OK);
+        return new ResponseEntity<>(baseProfile, HttpStatus.OK);
     }
 
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     @ResponseBody
-    public Profile getProfile(@RequestHeader("authorization") String headers) {
-        return validate(headers);
+    public ResponseEntity getProfile(@RequestHeader("authorization") String headers) {
+        Profile profile = validate(headers);
+         if(profile==null){
+             return new ResponseEntity<String> ("no user found token is invalid",HttpStatus.NOT_FOUND);
+         }else
+             return new ResponseEntity<Profile>(profile,HttpStatus.OK);
     }
 
     public Profile validate(String headers) {
@@ -107,7 +111,13 @@ public class ProfileController {
         header.set("Authorization", headers);
         HttpEntity<String> requestEntity =
                 new HttpEntity<>(header);
-        ValidateResponse validateResponse = restTemplate.exchange("http://localhost:2000/authentiq/v1/validate/token", HttpMethod.GET, requestEntity, ValidateResponse.class).getBody();
+        ValidateResponse validateResponse = null;
+        try {
+            validateResponse = restTemplate.exchange("http://localhost:2052/authentiq/v1/validate/token", HttpMethod.GET, requestEntity, ValidateResponse.class).getBody();
+        }catch (Exception e){
+           e.printStackTrace();
+           return null;
+        }
         return profileRepository.findByEmail(validateResponse.getEmail());
     }
 
