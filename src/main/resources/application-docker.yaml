@@ -1,0 +1,38 @@
+server:
+  port: 8080
+spring:
+#  autoconfigure:
+#    exclude: org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+  datasource:
+    driverClassName: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/cloud
+    username: root
+    password: test
+    hikari:
+      auto-commit: true
+      connection-timeout: 30000
+      idle-timeout: 75000
+      max-lifetime: 120000
+      minimum-idle: 10
+      maximum-pool-size: 20
+      initialization-fail-timeout: 1
+      connection-init-sql: SELECT 1
+      validation-timeout: 10000
+
+  jpa:
+    database: MYSQL
+    hibernate:
+      ddl-auto: update
+      naming:
+        implicit-strategy: org.springframework.boot.orm.jpa.hibernate.SpringImplicitNamingStrategy
+        physical-strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5Dialect
+        enable_lazy_load_no_trans: true
+        batch_versioned_data: true
+        batch_size: 100
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    show-sql: false
