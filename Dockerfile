@@ -1,4 +1,4 @@
-FROM alpine:edge
+FROM openjdk:8-jdk-alpine
 MAINTAINER s.m.malekabadi@gmail.com
 VOLUME /tmp
 EXPOSE 8080

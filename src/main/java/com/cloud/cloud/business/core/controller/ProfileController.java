@@ -1,9 +1,6 @@
 package com.cloud.cloud.business.core.controller;
 
-import com.cloud.cloud.business.data.Profile;
-import com.cloud.cloud.business.data.ProfileSimple;
-import com.cloud.cloud.business.data.RegisterResponse;
-import com.cloud.cloud.business.data.ValidateResponse;
+import com.cloud.cloud.business.data.*;
 import com.cloud.cloud.business.data.repository.ProfileRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
@@ -31,23 +28,16 @@ public class ProfileController {
 
     @RequestMapping(value = "/heartbeat", method = RequestMethod.GET)
     @ResponseBody
-    public String heartbeat(@RequestHeader("authorization") String headers) {
-        System.out.println(headers.substring(7));
+    public String heartbeat() {
         return "Account Management is up and running";
     }
 
 
     @RequestMapping(value = "/profile", method = RequestMethod.POST)
     @ResponseBody
-    public String createProfile(@RequestParam String email,
-                                @RequestParam(required = false) String password,
-                                @RequestParam String phoneNo,
-                                @RequestParam String nationalCode,
-                                @RequestParam String address,
-                                @RequestParam String postalCode) {
-        Profile profile = new Profile(email, phoneNo, nationalCode, address, postalCode, password);
-        ProfileSimple profileSimple = new ProfileSimple(email,password);
-        ImmutableMap payload = ImmutableMap.of("email",email,"password",password);
+    public String createProfile(@RequestBody Profile profile) {
+
+        ImmutableMap payload = ImmutableMap.of("email",profile.getEmail(),"password",profile.getPassword());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
@@ -55,10 +45,16 @@ public class ProfileController {
 
         HttpEntity<ImmutableMap> requestEntity =
                 new HttpEntity<ImmutableMap>(payload, headers);
-
+        try {
         RegisterResponse registerResponse = restTemplate.postForEntity("http://localhost:2000/authentiq/v1/user/register", requestEntity, RegisterResponse.class).getBody();
-        profileRepository.save(profile);
+        long profileId  = profileRepository.save(profile).getId();
+        Wallet wallet = new Wallet(profileId,0);
         return registerResponse.getToken();
+        }catch (Exception ex){
+            ex.printStackTrace();
+            return "Please check you username and password or maybe this email is already exists";
+        }
+
     }
 
     @RequestMapping(value = "/profile", method = RequestMethod.PUT)

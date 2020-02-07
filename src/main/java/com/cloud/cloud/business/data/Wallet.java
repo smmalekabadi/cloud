@@ -20,4 +20,9 @@ public class Wallet {
     @Column(unique = true)
     private long profileId;
     private long value;
+
+    public Wallet(long profileId, long value) {
+        this.profileId = profileId;
+        this.value = value;
+    }
 }
