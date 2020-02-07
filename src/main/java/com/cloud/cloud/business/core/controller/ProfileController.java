@@ -44,7 +44,7 @@ public class ProfileController {
                 new HttpEntity<ImmutableMap<String, Object>>(payload, headers);
         ResponseEntity<RegisterResponse> registerResponseResponseEntity = null;
         try {
-            registerResponseResponseEntity = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class);
+            registerResponseResponseEntity = restTemplate.postForEntity("http://192.168.1.3:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class);
             RegisterResponse registerResponse = registerResponseResponseEntity.getBody();
 //            RegisterResponse registerResponse = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class).getBody();
             long profileId = profileRepository.save(profile).getId();
@@ -113,7 +113,7 @@ public class ProfileController {
                 new HttpEntity<>(header);
         ValidateResponse validateResponse = null;
         try {
-            validateResponse = restTemplate.exchange("http://localhost:2052/authentiq/v1/validate/token", HttpMethod.GET, requestEntity, ValidateResponse.class).getBody();
+            validateResponse = restTemplate.exchange("http://192.168.1.3:2052/authentiq/v1/validate/token", HttpMethod.GET, requestEntity, ValidateResponse.class).getBody();
         }catch (Exception e){
            e.printStackTrace();
            return null;

@@ -4,5 +4,5 @@ VOLUME /tmp
 EXPOSE 8080
 ARG JAR_FILE=target/cloud-*.jar
 ADD ${JAR_FILE} cloud.jar
-ENTRYPOINT ["java","-jar","/cloud.jar"]
+ENTRYPOINT ["java","-Dspring.profiles.active=docker","-jar","/cloud.jar"]
 
