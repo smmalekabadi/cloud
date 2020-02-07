@@ -2,12 +2,10 @@ package com.cloud.cloud.business.core.controller;
 
 import com.cloud.cloud.business.data.*;
 import com.cloud.cloud.business.data.repository.ProfileRepository;
+import com.cloud.cloud.business.data.repository.WalletRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,10 +18,12 @@ import java.util.Map;
 public class ProfileController {
     RestTemplate restTemplate;
     ProfileRepository profileRepository;
+    WalletRepository walletRepository;
 
-    public ProfileController(RestTemplate restTemplate, ProfileRepository profileRepository) {
+    public ProfileController(RestTemplate restTemplate, ProfileRepository profileRepository, WalletRepository walletRepository) {
         this.restTemplate = restTemplate;
         this.profileRepository = profileRepository;
+        this.walletRepository = walletRepository;
     }
 
     @RequestMapping(value = "/heartbeat", method = RequestMethod.GET)
@@ -37,20 +37,23 @@ public class ProfileController {
     @ResponseBody
     public String createProfile(@RequestBody Profile profile) {
 
-        ImmutableMap payload = ImmutableMap.of("email",profile.getEmail(),"password",profile.getPassword());
+        ImmutableMap payload = ImmutableMap.of("email", profile.getEmail(), "password", profile.getPassword());
 
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<ImmutableMap> requestEntity =
-                new HttpEntity<ImmutableMap>(payload, headers);
+                new HttpEntity<>(payload, headers);
         try {
-        RegisterResponse registerResponse = restTemplate.postForEntity("http://localhost:2000/authentiq/v1/user/register", requestEntity, RegisterResponse.class).getBody();
-        long profileId  = profileRepository.save(profile).getId();
-        Wallet wallet = new Wallet(profileId,0);
-        return registerResponse.getToken();
-        }catch (Exception ex){
+            ResponseEntity<RegisterResponse> registerResponseResponseEntity = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class);
+            RegisterResponse registerResponse = registerResponseResponseEntity.getBody();
+//            RegisterResponse registerResponse = restTemplate.postForEntity("http://localhost:2052/authentiq/v1/user/register", requestEntity, RegisterResponse.class).getBody();
+            long profileId = profileRepository.save(profile).getId();
+            Wallet wallet = new Wallet(profileId, 0);
+            walletRepository.save(wallet);
+            return registerResponse.getToken();
+        } catch (Exception ex) {
             ex.printStackTrace();
             return "Please check you username and password or maybe this email is already exists";
         }
@@ -76,6 +79,7 @@ public class ProfileController {
     @RequestMapping(value = "/profile", method = RequestMethod.GET)
     @ResponseBody
     public Profile getProfile(@RequestHeader("authorization") String headers) {
+//        return profileRepository.findById(8L).get();
         return validate(headers);
     }
 
@@ -85,7 +89,7 @@ public class ProfileController {
         header.set("Authorization", headers);
         HttpEntity<String> requestEntity =
                 new HttpEntity<>(header);
-        ValidateResponse validateResponse = restTemplate.exchange("http://localhost:2000/authentiq/v1/validate/token", HttpMethod.GET,requestEntity,ValidateResponse.class).getBody();
+        ValidateResponse validateResponse = restTemplate.exchange("http://localhost:2000/authentiq/v1/validate/token", HttpMethod.GET, requestEntity, ValidateResponse.class).getBody();
         return profileRepository.findByEmail(validateResponse.getEmail());
     }
 
