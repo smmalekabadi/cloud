@@ -6,8 +6,10 @@ services:
     ports:
       - 2082:2082
     depends_on:
-      - mysql-db
+      - docker-mysql
     restart: unless-stopped
+    links:
+      - docker-mysql:mysql
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:2082/account/heartbeat"]
       interval: 1m
@@ -24,8 +26,7 @@ services:
 #        - spread: node.labels.nodes
   mysql-db:
     image: mysql
-    ports:
-    - "3306:3306"
+    container_name: docker-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_PASSWORD: root
