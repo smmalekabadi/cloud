@@ -2,49 +2,42 @@ version: '3.4'
 
 services:
   acc:
-    image: sayid/authentiq:${AUTHENTIQ_VERSION:-alpine-1}
+    image: malekabadi/cloud-project:latest
     ports:
-      - ${AUTHENTIQ_PORT:-2052}:2000
-    environment:
-      NODE_ENV: ${AUTHENTIQ_ENV-:production}
-      AUTHENTIQ_DOMAIN: ${AUTHENTIQ_DOMAIN}
-      AUTHENTIQ_DB_HOST: authentiq-db
-      AUTHENTIQ_DB_PORT: 27017
-      AUTHENTIQ_DB_NAME: authentiq
-      AUTHENTIQ_DB_USERNAME: authentiq
-      AUTHENTIQ_DB_PASSWORD: authentiqrocks
-      AUTHENTIQ_ADMIN_USERNAME: ${AUTHENTIQ_ADMIN_USERNAME}
-      AUTHENTIQ_ADMIN_PASSWORD: ${AUTHENTIQ_ADMIN_PASSWORD}
-      AUTHENTIQ_SMTP_HOST: ${AUTHENTIQ_SMTP_HOST}
-      AUTHENTIQ_SMTP_PORT: ${AUTHENTIQ_SMTP_PORT}
-      AUTHENTIQ_SMTP_USERNAME: ${AUTHENTIQ_SMTP_USERNAME}
-      AUTHENTIQ_SMTP_PASSWORD: ${AUTHENTIQ_SMTP_PASSWORD}
+      - 2082:2082
     depends_on:
-      - authentiq-db
+      - mysql-db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:2000/authentiq/v1/heartbeat"]
+      test: ["CMD", "curl", "-f", "http://localhost:2082/account/heartbeat"]
       interval: 1m
       timeout: 10s
       retries: 5
       start_period: 1m
-
-  authentiq-db:
-    image: sayid/mongo:alpine
+    deploy:
+      mode: replicated
+      replicas: 2
+      restart_policy:
+        condition: on-failure
+#      placement:
+#        preferences:
+#        - spread: node.labels.nodes
+  mysql-db:
+    image: mysql
+    ports:
+    - "3306:3306"
     environment:
-      MONGO_INITDB_ROOT_USERNAME: authentiq
-      MONGO_INITDB_ROOT_PASSWORD: authentiqrocks
-    logging:
-      driver: 'none'
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: cloud
     restart: unless-stopped
     healthcheck:
-      test: "echo 'db.stats().ok' | mongo localhost:27017/authentiq --quiet"
-      interval: 45s
-      timeout: 10s
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost","-proot" ]
+      timeout: 45s
+      interval: 10s
       retries: 10
-      start_period: 15s
     volumes:
-      - authentiq-db-data:/data/db
+      - mysql-db-data:/data/db
 
 volumes:
-  authentiq-db-data:
+  mysql-db-data:
