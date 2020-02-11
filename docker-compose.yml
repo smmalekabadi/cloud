@@ -1,7 +1,7 @@
 version: '3.4'
 
 services:
-  authentiq:
+  acc:
     image: sayid/authentiq:${AUTHENTIQ_VERSION:-alpine-1}
     ports:
       - ${AUTHENTIQ_PORT:-2052}:2000
