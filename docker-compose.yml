@@ -24,7 +24,7 @@ services:
 #      placement:
 #        preferences:
 #        - spread: node.labels.nodes
-  mysql-db:
+  docker-mysql:
     image: mysql
     container_name: docker-mysql
     environment:

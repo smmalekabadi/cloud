@@ -17,7 +17,7 @@ public class Profile {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private long id;
-    @Column(unique = true)
+//    @Column(unique = true)
     @NonNull
     private String email;
     private String phoneNo;
