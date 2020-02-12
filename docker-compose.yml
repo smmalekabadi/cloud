@@ -3,13 +3,19 @@ version: '3.4'
 services:
   acc:
     image: malekabadi/cloud-project:latest
+    expose:
+      - 2082
     ports:
       - 2082:2082
     depends_on:
       - docker-mysql
     restart: unless-stopped
-    links:
-      - docker-mysql:mysql
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://docker-mysql:3306/cloud
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+    #    links:
+#      - "docker-mysql:mysql"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:2082/account/heartbeat"]
       interval: 1m
@@ -24,11 +30,12 @@ services:
 #      placement:
 #        preferences:
 #        - spread: node.labels.nodes
-  mysql-db:
+  docker-mysql:
     image: mysql
     container_name: docker-mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
       MYSQL_PASSWORD: root
       MYSQL_DATABASE: cloud
     restart: unless-stopped
